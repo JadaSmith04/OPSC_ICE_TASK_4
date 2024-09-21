@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">ICETASK4</string>
+    <string name="map_view_description">Map view displaying user location and nearby places.</string>
+
 </resources>

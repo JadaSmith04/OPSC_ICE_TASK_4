@@ -2,6 +2,7 @@ package com.example.icetask4
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationListener
@@ -13,8 +14,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import android.location.Geocoder
 import java.io.IOException
 import java.util.Locale
@@ -26,23 +27,72 @@ class MainActivity : AppCompatActivity(), LocationListener { // Add LocationList
     private lateinit var locationTextView: TextView
     private val locationPermissionCode = 1
 
+    // Declare FusedLocationProviderClient and currentLocation
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private var currentLocation: Location? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
 
-        val button: Button = findViewById(R.id.btnGetLocatioin) // Set up button for getting location
+        // Initialize FusedLocationProviderClient
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
+        // Set up button for getting location
+        val button: Button = findViewById(R.id.btnGetLocatioin)
         button.setOnClickListener {
-            getLocation() // Fetch the location on button click
+            getCurrentLocation() // Fetch the current location on button click
+        }
+
+        // Set up button for showing map
+        val showMapButton: Button = findViewById(R.id.btnShowMap)
+        showMapButton.setOnClickListener {
+            if (currentLocation != null) { // Check if location is available
+                val intent = Intent(this, MapActivity::class.java)
+                intent.putExtra("location", currentLocation)
+                startActivity(intent)
+            } else {
+                tvOutput.text = "Location not available yet!"
+            }
         }
     }
 
-    // Request location updates
+    // Function to get the current location using FusedLocationProviderClient
+    private fun getCurrentLocation() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            // Request permission if not already granted
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                locationPermissionCode
+            )
+        } else {
+            // Fetch the last known location
+            fusedLocationClient.lastLocation
+                .addOnSuccessListener { location: Location? ->
+                    if (location != null) {
+                        currentLocation = location
+                        // Update the UI with the current location
+                        onLocationChanged(location)
+                    } else {
+                        tvOutput.text = "Location not found. Please try again."
+                    }
+                }
+                .addOnFailureListener {
+                    tvOutput.text = "Failed to get location."
+                }
+        }
+    }
+
+    // Request location updates with LocationManager
     private fun getLocation() {
         locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-            != PackageManager.PERMISSION_GRANTED) {
-
+            != PackageManager.PERMISSION_GRANTED
+        ) {
             // Request permission if not already granted
             ActivityCompat.requestPermissions(
                 this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), locationPermissionCode
@@ -101,7 +151,7 @@ class MainActivity : AppCompatActivity(), LocationListener { // Add LocationList
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == locationPermissionCode && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             // If permission is granted, fetch location
-            getLocation()
+            getCurrentLocation()
         } else {
             // Handle the case where permission is denied
             tvOutput.text = "Permission Denied"

@@ -1,6 +1,6 @@
 plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.jetbrains.kotlin.android)
+    alias(libs.plugins.android.application) // Plugin alias from your version catalog
+    alias(libs.plugins.jetbrains.kotlin.android) // Plugin alias from your version catalog
 }
 
 android {
@@ -26,24 +26,29 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
+
     kotlinOptions {
         jvmTarget = "1.8"
     }
 }
 
 dependencies {
+    implementation(libs.androidx.core.ktx) // Proper use of 'implementation'
+    implementation(libs.androidx.appcompat) // Proper use of 'implementation'
+    implementation(libs.material) // Proper use of 'implementation'
+    implementation(libs.androidx.activity) // Proper use of 'implementation'
+    implementation(libs.androidx.constraintlayout) // Proper use of 'implementation'
+    implementation(libs.play.services.location) // Proper use of 'implementation'
 
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.appcompat)
-    implementation(libs.material)
-    implementation(libs.androidx.activity)
-    implementation(libs.androidx.constraintlayout)
-    implementation(libs.play.services.location)
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
+    // Google Maps dependency for map functionality
+    implementation("com.google.android.gms:play-services-maps:18.1.0")
+
+    testImplementation(libs.junit) // Correct placement
+    androidTestImplementation(libs.androidx.junit) // Correct placement
+    androidTestImplementation(libs.androidx.espresso.core) // Correct placement
 }
